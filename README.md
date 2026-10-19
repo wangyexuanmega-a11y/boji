@@ -66,9 +66,9 @@ GitHub 新建仓库 → Add file → Upload files → 把 `index.html`、`css/`�
 
 **直接下载：**
 
-https://github.com/wangyexuanmega-a11y/boji/releases/download/v1.0.0/boji-v1.0.apk
+https://github.com/wangyexuanmega-a11y/boji/releases/download/v1.1.0/boji-v1.1.apk
 
-手机浏览器打开就能下（4 MB）。下载完点开安装，Android 会提示「未知来源」，允许一次即可。
+手机浏览器打开就能下（3.6 MB）。下载完点开安装，Android 会提示「未知来源」，允许一次即可。
 
 这是 debug 签名版本，自己用没问题，不能上应用商店。
 
