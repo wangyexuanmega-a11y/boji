@@ -541,8 +541,9 @@
           '</div>' +
         '</div>';
       }).join("") +
-      '<div class="tiny" style="margin-top:10px;line-height:1.6;padding-top:10px;border-top:1px solid var(--line-2)">' +
+      '<div class="tiny" style="margin-top:10px;line-height:1.65;padding-top:10px;border-top:1px solid var(--line-2)">' +
         '单杠在哪：学校操场、体育馆、宿舍楼下一般都有。实在没有，买一根门上单杠，五十块，不占地。' +
+        '<br><br>以后买了哑铃：俯卧撑换哑铃卧推，反向划船换哑铃划船，其余照旧。别急着买，先把自重练明白。' +
       '</div>' +
     '</div>';
 
