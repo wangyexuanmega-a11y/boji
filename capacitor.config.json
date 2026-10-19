@@ -1,0 +1,11 @@
+{
+  "appId": "com.boji.app",
+  "appName": "薄肌",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

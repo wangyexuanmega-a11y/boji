@@ -47,8 +47,8 @@ window.APP_DATA = (function () {
 
   /* ---------- 每日任务定义 ---------- */
   const TASKS = [
-    { key: "wake", label: "早起", meta: "06:10 起床 · 不赖床", icon: "sun", color: "amber" },
-    { key: "es", label: "西班牙语", meta: "40 分钟 · 晨读 + Anki + 跟读", icon: "lang", color: "orange" },
+    { key: "wake", label: "早起", meta: "闹钟响了就起，别赖床", icon: "sun", color: "amber" },
+    { key: "es", label: "西班牙语", meta: "多邻国 · 完成今日任务", icon: "lang", color: "orange" },
     { key: "ml", label: "机器学习", meta: "120 分钟 · 专注计时", icon: "brain", color: "blue" },
     { key: "train", label: "训练", meta: "按今日计划完成", icon: "dumbbell", color: "red" },
     { key: "diet", label: "饮食", meta: "三餐达标 · 蛋白 120g", icon: "bowl", color: "green" },
@@ -255,11 +255,10 @@ window.APP_DATA = (function () {
     ],
   };
 
-  /* ---------- 西班牙语每日配方 ---------- */
+  /* ---------- 西班牙语：只走多邻国 ---------- */
   const SPANISH = [
-    { name: "Anki 复习", min: 15, cue: "先清昨天的卡片，别加新词" },
-    { name: "新课 / 语法", min: 15, cue: "一次只啃一个点，比如 ser vs estar" },
-    { name: "影子跟读", min: 10, cue: "跟读 1 分钟音频，模仿语调而不是背单词" },
+    { name: "每日目标", min: 15, cue: "打开就做，别挑时间，别挑状态" },
+    { name: "错题复习", min: 5, cue: "错题本刷一遍，比开新课有用" },
   ];
 
   /* ---------- 机器学习每日配方 ---------- */

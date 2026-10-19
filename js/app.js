@@ -45,16 +45,16 @@
   /* ================= 状态 ================= */
   function defaultState() {
     return {
-      v: 1,
+      v: 2,
       profile: {
         height: 170, weight: 68.5, targetWeight: 63.5, targetHeight: 172,
         dailyKcal: 2150, dailyProtein: 120, dailyWater: 2500
       },
       settings: {
         semesterStart: "2026-09-21",
-        wakeTime: "06:10",
+        wakeTime: "07:00",
         sleepTime: "23:00",
-        esMin: 40,
+        esMin: 20,
         mlMin: 120
       },
       courses: JSON.parse(JSON.stringify(D.COURSES)),
@@ -70,7 +70,15 @@
     if (raw) {
       try {
         var s = JSON.parse(raw);
-        if (s && s.profile && s.settings) return s;
+        if (s && s.profile && s.settings) {
+          // v1 → v2：起床改 07:00，西语改多邻国 20 分钟
+          if (!s.v || s.v < 2) {
+            s.settings.wakeTime = "07:00";
+            s.settings.esMin = 20;
+            s.v = 2;
+          }
+          return s;
+        }
       } catch (e) { /* 损坏则重建 */ }
     }
     return defaultState();
@@ -158,9 +166,9 @@
 
   /* ================= 今日建议 ================= */
   var DAY_PLAN = {
-    1: { ml: ["09:00", "11:00"], train: ["16:00", "17:00"], note: "周一没课，整块时间给机器学习" },
+    1: { ml: ["08:00", "10:00"], train: ["16:00", "17:00"], note: "周一没课，整块时间给机器学习" },
     2: { ml: ["21:00", "22:30"], train: ["20:50", "21:50"], note: "满课日，学习拆成中午+晚上" },
-    3: { ml: ["08:00", "10:00"], train: ["17:50", "18:40"], note: "上午空档两小时，别睡过去" },
+    3: { ml: ["07:50", "09:50"], train: ["17:50", "18:40"], note: "上午空档两小时，别睡过去" },
     4: { ml: ["08:00", "09:40"], train: ["15:00", "16:00"], note: "早上先学，下午练腿" },
     5: { ml: ["17:00", "18:50"], train: ["21:00", "21:50"], note: "课多，抓住 17 点这段空档" },
     6: { ml: ["14:00", "16:00"], train: ["10:00", "11:00"], note: "周末是拉开差距的地方" },
@@ -376,7 +384,7 @@
 
   function taskMeta(t, k) {
     if (t.key === "wake") return S.settings.wakeTime + " 起床 · 不赖床";
-    if (t.key === "es") return S.settings.esMin + " 分钟 · 晨读 + Anki + 跟读";
+    if (t.key === "es") return "多邻国 · " + S.settings.esMin + " 分钟，别断连胜";
     if (t.key === "ml") return S.settings.mlMin + " 分钟 · 点击开始专注计时";
     if (t.key === "train") return (D.WORKOUTS[isoDay(new Date())] || {}).name || "按今日计划完成";
     if (t.key === "water") return "目标 " + S.profile.dailyWater + " ml · 点一次加一杯";
