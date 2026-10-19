@@ -45,7 +45,7 @@
   /* ================= 状态 ================= */
   function defaultState() {
     return {
-      v: 2,
+      v: 3,
       profile: {
         height: 170, weight: 68.5, targetWeight: 63.5, targetHeight: 172,
         dailyKcal: 2150, dailyProtein: 120, dailyWater: 2500
@@ -76,6 +76,11 @@
             s.settings.wakeTime = "07:00";
             s.settings.esMin = 20;
             s.v = 2;
+          }
+          // v2 → v3：课表换成完整版（13 节 + 周次范围 + 教师）
+          if (!s.v || s.v < 3) {
+            s.courses = JSON.parse(JSON.stringify(D.COURSES));
+            s.v = 3;
           }
           return s;
         }
@@ -113,16 +118,39 @@
   }
   function isoDay(date) { var d = date.getDay(); return d === 0 ? 7 : d; }
 
+  /* 周次匹配：支持 "all" / "1-14" / "11" / "2-16双" / "1-16单" / 旧的 odd/even */
+  function weekMatch(weeks, n) {
+    if (!weeks || weeks === "all") return true;
+    if (weeks === "odd") return n % 2 === 1;
+    if (weeks === "even") return n % 2 === 0;
+    var m = String(weeks).match(/^\s*(\d{1,2})(?:\s*[-~—]\s*(\d{1,2}))?\s*(单|双)?\s*周?\s*$/);
+    if (!m) return true;
+    var a = +m[1];
+    var b = m[2] ? +m[2] : a;
+    var p = m[3];
+    if (n < Math.min(a, b) || n > Math.max(a, b)) return false;
+    if (p === "单") return n % 2 === 1;
+    if (p === "双") return n % 2 === 0;
+    return true;
+  }
+
+  function weeksLabel(weeks) {
+    if (!weeks || weeks === "all") return "";
+    if (weeks === "odd") return "单周";
+    if (weeks === "even") return "双周";
+    return String(weeks).replace(/周$/, "") + "周";
+  }
+
   function period(n) {
     for (var i = 0; i < D.PERIODS.length; i++) if (D.PERIODS[i].n === n) return D.PERIODS[i];
     return { n: n, start: "--:--", end: "--:--" };
   }
 
   function coursesFor(date) {
-    var p = weekOf(date).parity;
+    var w = weekOf(date).week;
     var day = isoDay(date);
     return S.courses
-      .filter(function (c) { return c.day === day && (c.weeks === "all" || c.weeks === p); })
+      .filter(function (c) { return c.day === day && weekMatch(c.weeks, w); })
       .sort(function (a, b) { return a.start - b.start; });
   }
 
@@ -166,11 +194,11 @@
 
   /* ================= 今日建议 ================= */
   var DAY_PLAN = {
-    1: { ml: ["08:00", "10:00"], train: ["16:00", "17:00"], note: "周一没课，整块时间给机器学习" },
-    2: { ml: ["21:00", "22:30"], train: ["20:50", "21:50"], note: "满课日，学习拆成中午+晚上" },
-    3: { ml: ["07:50", "09:50"], train: ["17:50", "18:40"], note: "上午空档两小时，别睡过去" },
-    4: { ml: ["08:00", "09:40"], train: ["15:00", "16:00"], note: "早上先学，下午练腿" },
-    5: { ml: ["17:00", "18:50"], train: ["21:00", "21:50"], note: "课多，抓住 17 点这段空档" },
+    1: { ml: ["08:00", "09:40"], train: ["17:40", "18:40"], note: "3-4 节有课，早上先学 1 小时 40 分，晚上补 20 分钟" },
+    2: { ml: ["19:00", "21:00"], train: ["18:30", "19:20"], note: "满课日，下课先练，再学两小时" },
+    3: { ml: ["07:50", "09:50"], train: ["17:00", "17:50"], note: "上午两小时空档，游完泳练核心" },
+    4: { ml: ["08:00", "09:50"], train: ["18:00", "19:00"], note: "早上先学，晚上练腿" },
+    5: { ml: ["19:30", "21:30"], train: ["18:30", "19:20"], note: "课多，18:15 下课后先练再学" },
     6: { ml: ["14:00", "16:00"], train: ["10:00", "11:00"], note: "周末是拉开差距的地方" },
     7: { ml: ["14:00", "16:00"], train: ["—", "—"], note: "今天只恢复，不动铁" }
   };
@@ -237,7 +265,7 @@
           '</div>' +
           '<div style="text-align:right">' +
             '<div class="date-main">' + (now.getMonth() + 1) + " 月 " + now.getDate() + " 日 · " + WD_CN[now.getDay()] + '</div>' +
-            '<div class="date-sub">第 ' + wi.week + ' 周 · ' + wi.label + '</div>' +
+            '<div class="date-sub">第 ' + wi.week + ' 周</div>' +
           '</div>' +
         '</div>';
     };
@@ -310,7 +338,9 @@
             '<div class="tc-time">' + period(c.start).start + '<br><span style="color:var(--ink-3);font-weight:500">' + period(c.end).end + '</span></div>' +
             '<div class="tc-bar" style="background:' + col.bar + '"></div>' +
             '<div class="tc-body"><div class="tc-name">' + esc(c.name) + '</div>' +
-            '<div class="tc-meta">' + esc(c.room) + ' · ' + c.start + "-" + c.end + ' 节' + (c.note ? " · " + esc(c.note) : "") + '</div></div>' +
+            '<div class="tc-meta">' + esc(c.room) + ' · ' + c.start + "-" + c.end + ' 节' +
+              (c.teacher ? ' · ' + esc(c.teacher) : '') +
+            '</div></div>' +
           '</div>';
         }).join("") +
       '</div>';
@@ -409,7 +439,7 @@
     // 表头
     var head = '<div class="sched-head">' +
       '<div><div style="font-size:19px;font-weight:750;letter-spacing:-.02em">课表</div>' +
-      '<div class="tiny">第 ' + wi.week + ' 周 · ' + wi.label + '</div></div>' +
+      '<div class="tiny">第 ' + wi.week + ' 周 · 左右滑动看全周</div></div>' +
       '<div class="week-nav">' +
         '<button data-act="wk-prev" aria-label="上一周">' + ico("left") + '</button>' +
         '<button data-act="wk-today" style="width:auto;padding:0 9px;font-size:11.5px;font-weight:650">本周</button>' +
@@ -427,16 +457,15 @@
         '<div class="d">' + WD_S[d % 7] + '</div><div class="n">' + dd.getDate() + '</div></div>';
     }
     // 时间列 + 空行
-    for (var p = 1; p <= 10; p++) {
+    for (var p = 1; p <= 13; p++) {
       grid += '<div class="gt" style="grid-row:' + (p + 1) + '">' + p + '</div>';
       for (var d2 = 1; d2 <= 7; d2++) {
         grid += '<div class="cell" style="grid-column:' + (d2 + 1) + ';grid-row:' + (p + 1) + '"></div>';
       }
     }
     // 课程块
-    var parity = wi.parity;
     S.courses.forEach(function (c) {
-      if (c.weeks !== "all" && c.weeks !== parity) return;
+      if (!weekMatch(c.weeks, wi.week)) return;
       var col = D.COLORS[c.color] || D.COLORS.blue;
       var span = c.end - c.start + 1;
       grid += '<div class="blk" data-course="' + c.id + '" ' +
@@ -444,7 +473,7 @@
         'background:' + col.bg + ';color:' + col.fg + ';border-left-color:' + col.bar + '">' +
         '<div class="cname">' + esc(c.name) + '</div>' +
         '<div class="croom">' + esc(c.room) + '</div>' +
-        (c.weeks !== "all" ? '<div class="cwk">' + (c.weeks === "odd" ? "单周" : "双周") + '</div>' : '') +
+        (c.weeks && c.weeks !== "all" ? '<div class="cwk">' + esc(weeksLabel(c.weeks)) + '</div>' : '') +
       '</div>';
     });
     grid += '</div></div>';
@@ -459,7 +488,10 @@
           '<div class="tc-time">' + period(c.start).start + '<br><span style="color:var(--ink-3);font-weight:500">' + period(c.end).end + '</span></div>' +
           '<div class="tc-bar" style="background:' + col.bar + '"></div>' +
           '<div class="tc-body"><div class="tc-name">' + esc(c.name) + '</div>' +
-          '<div class="tc-meta">' + esc(c.room) + ' · ' + c.start + "-" + c.end + ' 节' + (c.note ? " · " + esc(c.note) : "") + '</div></div>' +
+          '<div class="tc-meta">' + esc(c.room) + ' · ' + c.start + "-" + c.end + ' 节' +
+            (c.teacher ? ' · ' + esc(c.teacher) : '') +
+            (c.weeks && c.weeks !== "all" ? ' · ' + esc(weeksLabel(c.weeks)) : '') +
+          '</div></div>' +
         '</div>';
       }).join("") + '</div>';
     } else {
@@ -488,7 +520,7 @@
           '<button class="btn btn-sm btn-ghost" data-act="add-course">' + ico("plus") + '加课</button>' +
         '</div></div>' +
       list +
-      '<p class="tiny" style="margin:14px 2px;line-height:1.6">点课程块可以编辑或删除。单双周按学期起始日自动计算，起始日在「数据 → 设置」里改。</p>';
+      '<p class="tiny" style="margin:14px 2px;line-height:1.6">点课程块可以编辑或删除。每门课按自己的周次范围显示（如 1-14 周、2-16 双周），当前是第 ' + wi.week + ' 周。学期起始日在「数据 → 设置」里改。</p>';
   }
 
   /* ================= 渲染：训练 ================= */
@@ -912,22 +944,18 @@
     var isNew = !c;
     c = c || { id: "", name: "", day: isoDay(new Date()), start: 1, end: 2, room: "", weeks: "all", color: "blue" };
 
-    var dayOpts = "", perOpts = "", weeksOpts = "", colorOpts = "";
+    var dayOpts = "", perOpts = "", colorOpts = "";
     for (var d = 1; d <= 7; d++) dayOpts += '<option value="' + d + '"' + (c.day === d ? " selected" : "") + '>' + WD_CN[d] + '</option>';
-    for (var p = 1; p <= 10; p++) perOpts += '<option value="' + p + '"' + (c.start === p ? " selected" : "") + '>' + p + '</option>';
-    for (var p2 = 1; p2 <= 10; p2++) perOpts += '';
-    [["all", "每周"], ["odd", "单周"], ["even", "双周"]].forEach(function (w) {
-      weeksOpts += '<option value="' + w[0] + '"' + (c.weeks === w[0] ? " selected" : "") + '>' + w[1] + '</option>';
-    });
+    for (var p = 1; p <= 13; p++) perOpts += '<option value="' + p + '"' + (c.start === p ? " selected" : "") + '>' + p + '</option>';
     Object.keys(D.COLORS).forEach(function (k) {
       colorOpts += '<option value="' + k + '"' + (c.color === k ? " selected" : "") + '>' + (COLOR_NAME[k] || k) + '</option>';
     });
     var endOpts = "";
-    for (var e = 1; e <= 10; e++) endOpts += '<option value="' + e + '"' + (c.end === e ? " selected" : "") + '>' + e + '</option>';
+    for (var e = 1; e <= 13; e++) endOpts += '<option value="' + e + '"' + (c.end === e ? " selected" : "") + '>' + e + '</option>';
 
     openSheet('' +
       '<div class="sheet-title">' + (isNew ? "添加课程" : "编辑课程") + '</div>' +
-      '<div class="sheet-sub">按你学校实际节次时间调整</div>' +
+      '<div class="sheet-sub">周次写 1-16 表示 1 到 16 周；2-16双 表示双周；11 表示只有第 11 周</div>' +
       '<div class="field"><label>课程名</label><input id="f-name" value="' + esc(c.name) + '" placeholder="例如：工程力学"></div>' +
       '<div class="field-row">' +
         '<div class="field"><label>星期</label><select id="f-day">' + dayOpts + '</select></div>' +
@@ -936,8 +964,9 @@
       '</div>' +
       '<div class="field-row">' +
         '<div class="field"><label>教室</label><input id="f-room" value="' + esc(c.room) + '" placeholder="教二-101"></div>' +
-        '<div class="field"><label>周次</label><select id="f-weeks">' + weeksOpts + '</select></div>' +
+        '<div class="field"><label>周次</label><input id="f-weeks" value="' + esc(c.weeks === "all" ? "" : c.weeks) + '" placeholder="1-16"></div>' +
       '</div>' +
+      '<div class="field"><label>教师（可不填）</label><input id="f-teacher" value="' + esc(c.teacher || "") + '" placeholder="汤轶群"></div>' +
       '<div class="field"><label>颜色</label><select id="f-color">' + colorOpts + '</select></div>' +
       '<div style="display:flex;gap:9px;margin-top:16px">' +
         (isNew ? "" : '<button class="btn btn-outline" style="flex:0 0 auto;color:#B4382C" data-act="del-course" data-id="' + c.id + '">删除</button>') +
@@ -959,7 +988,8 @@
       start: start,
       end: end,
       room: $("#f-room").value.trim(),
-      weeks: $("#f-weeks").value,
+      teacher: $("#f-teacher").value.trim(),
+      weeks: ($("#f-weeks").value.trim() || "all"),
       color: $("#f-color").value
     };
     if (id) {
@@ -1002,11 +1032,13 @@
       var day = 0, start = 0, end = 0, room = "", weeks = "all";
       var m;
 
-      // 周次：1-16周 / 第1-16周 / 单周 / 双周
-      if ((m = rest.match(/(?:第)?\s*(\d{1,2})\s*[-~—－至]\s*(\d{1,2})\s*周/))) {
+      // 周次：1-16周 / 第1-16周 / 1-14周(双) / 11周 / 单周 / 双周
+      if ((m = rest.match(/(?:第)?\s*(\d{1,2})\s*[-~—－至]\s*(\d{1,2})\s*周\s*[（(]?\s*(单|双)?/))) {
+        weeks = m[1] + "-" + m[2] + (m[3] || "");
         rest = rest.replace(m[0], " ");
-        if (/单/.test(line)) weeks = "odd";
-        else if (/双/.test(line)) weeks = "even";
+      } else if ((m = rest.match(/(?:第)?\s*(\d{1,2})\s*周\s*[（(]?\s*(单|双)?/))) {
+        weeks = m[1] + (m[2] || "");
+        rest = rest.replace(m[0], " ");
       } else if ((m = rest.match(/(单|双)周/))) {
         weeks = m[1] === "单" ? "odd" : "even";
         rest = rest.replace(m[0], " ");
@@ -1030,8 +1062,8 @@
       }
       if (!start) { skipped++; return; }
       if (end < start) { var tmp = start; start = end; end = tmp; }
-      if (start < 1 || start > 10) { skipped++; return; }
-      end = Math.min(end, 10);
+      if (start < 1 || start > 13) { skipped++; return; }
+      end = Math.min(end, 13);
 
       // 教室
       if ((m = rest.match(/(?:教室|地点|上课地点)\s*[:：]?\s*([^\s,，;；|]+)/))) {

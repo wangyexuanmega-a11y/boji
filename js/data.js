@@ -6,43 +6,54 @@
 window.APP_DATA = (function () {
   "use strict";
 
-  /* ---------- 节次时间（可按自己学校改） ---------- */
+  /* ---------- 节次时间（东南大学 2026-2027 秋） ---------- */
   const PERIODS = [
     { n: 1, start: "08:00", end: "08:45" },
-    { n: 2, start: "08:55", end: "09:40" },
-    { n: 3, start: "10:00", end: "10:45" },
-    { n: 4, start: "10:55", end: "11:40" },
-    { n: 5, start: "14:00", end: "14:45" },
-    { n: 6, start: "14:55", end: "15:40" },
-    { n: 7, start: "16:00", end: "16:45" },
-    { n: 8, start: "16:55", end: "17:40" },
-    { n: 9, start: "19:00", end: "19:45" },
-    { n: 10, start: "19:55", end: "20:40" },
+    { n: 2, start: "08:50", end: "09:35" },
+    { n: 3, start: "09:50", end: "10:35" },
+    { n: 4, start: "10:40", end: "11:25" },
+    { n: 5, start: "11:30", end: "12:15" },
+    { n: 6, start: "14:00", end: "14:45" },
+    { n: 7, start: "14:50", end: "15:35" },
+    { n: 8, start: "15:50", end: "16:35" },
+    { n: 9, start: "16:40", end: "17:25" },
+    { n: 10, start: "17:30", end: "18:15" },
+    { n: 11, start: "19:00", end: "19:45" },
+    { n: 12, start: "19:50", end: "20:35" },
+    { n: 13, start: "20:40", end: "21:25" },
   ];
 
   /* ---------- 课程 ----------
      day: 1=周一 … 7=周日
-     weeks: 'all' | 'odd'(单周) | 'even'(双周)
+     weeks: "all" | "1-14" | "11" | "2-16双" | "1-16单"
   ------------------------------------ */
   const COURSES = [
-    // 周一：无课（留白给机器学习和训练）
-    { id: "c01", name: "工程力学", day: 2, start: 1, end: 2, room: "教二-101", weeks: "all", color: "blue" },
-    { id: "c02", name: "大学物理(B)II", day: 2, start: 3, end: 4, room: "教六-201", weeks: "all", color: "violet" },
-    { id: "c03", name: "画法几何与工程制图基础", day: 2, start: 6, end: 7, room: "教二-107", weeks: "all", color: "teal" },
-    { id: "c04", name: "影视艺术鉴赏与导论", day: 2, start: 8, end: 10, room: "教七-203", weeks: "all", color: "pink" },
-    // 注：第4周「实验室安全与准入」为临时调课，与影视鉴赏冲突，未放入常规课表。
-    // 需要时在课表页「加课」里手动添加即可。
+    // 周一
+    { id: "c01", name: "高阶外语", day: 1, start: 3, end: 4, room: "教七-205", teacher: "王卓文", weeks: "1-12", color: "amber" },
+    { id: "c02", name: "物理化学(D)(上)", day: 1, start: 6, end: 7, room: "教二-312", teacher: "沈彬", weeks: "1-16", color: "red" },
+    { id: "c03", name: "实验室安全与准入", day: 1, start: 8, end: 9, room: "教一-103", teacher: "陈春", weeks: "1-5", color: "slate" },
+    { id: "c04", name: "科技论文读写", day: 1, start: 8, end: 9, room: "教一-103", teacher: "孙文文", weeks: "6-13", color: "teal" },
 
-    { id: "c06", name: "体育III（游泳）", day: 3, start: 3, end: 4, room: "游泳馆", weeks: "all", color: "green" },
-    { id: "c07", name: "马克思主义基本原理", day: 3, start: 6, end: 8, room: "教六-202", weeks: "all", color: "red" },
+    // 周二
+    { id: "c05", name: "工程力学", day: 2, start: 1, end: 2, room: "教二-101", teacher: "汤轶群", weeks: "1-14", color: "blue" },
+    { id: "c06", name: "大学物理(B)II", day: 2, start: 3, end: 4, room: "教六-201", teacher: "庞侯荣", weeks: "1-16", color: "violet" },
+    { id: "c07", name: "画法几何与工程制图基础", day: 2, start: 6, end: 7, room: "教二-107", teacher: "郭志君", weeks: "1-14", color: "teal" },
+    { id: "c08", name: "影视艺术鉴赏与导论", day: 2, start: 8, end: 10, room: "教七-203", teacher: "田兆耀", weeks: "1-10", color: "pink" },
+    { id: "c09", name: "影视艺术鉴赏与导论", day: 2, start: 8, end: 9, room: "教七-203", teacher: "田兆耀", weeks: "11", color: "pink" },
 
-    { id: "c08", name: "材料科学基础(B)(上)", day: 4, start: 3, end: 5, room: "教七-104", weeks: "all", color: "cyan", note: "全英文授课" },
-    { id: "c09", name: "大学物理实验", day: 4, start: 6, end: 7, room: "物理实验中心", weeks: "even", color: "slate", note: "双周周四下午" },
+    // 周三
+    { id: "c10", name: "体育III（游泳）", day: 3, start: 3, end: 4, room: "游泳馆", teacher: "郭璠", weeks: "1-16", color: "green" },
+    { id: "c11", name: "马克思主义基本原理", day: 3, start: 6, end: 8, room: "教六-202", teacher: "郝娜", weeks: "1-16", color: "red" },
 
-    { id: "c10", name: "大学物理(B)II", day: 5, start: 1, end: 2, room: "教六-201", weeks: "all", color: "violet" },
-    { id: "c11", name: "画法几何与工程制图基础", day: 5, start: 3, end: 4, room: "教二-107", weeks: "all", color: "teal" },
-    { id: "c12", name: "工程力学", day: 5, start: 6, end: 7, room: "教二-101", weeks: "all", color: "blue" },
-    { id: "c13", name: "形势与政策(3)", day: 5, start: 9, end: 10, room: "教四-401", weeks: "all", color: "amber" },
+    // 周四
+    { id: "c12", name: "材料科学基础(B)(上)", day: 4, start: 3, end: 5, room: "教七-104", teacher: "孙正明、张培根", weeks: "1-16", color: "cyan", note: "全英文授课" },
+    { id: "c13", name: "大学物理实验(理工)II", day: 4, start: 6, end: 9, room: "田家炳南楼 3-5 楼", teacher: "安明", weeks: "2-16双", color: "slate" },
+
+    // 周五
+    { id: "c14", name: "大学物理(B)II", day: 5, start: 1, end: 2, room: "教六-201", teacher: "庞侯荣", weeks: "1-16", color: "violet" },
+    { id: "c15", name: "画法几何与工程制图基础", day: 5, start: 3, end: 4, room: "教二-107", teacher: "郭志君", weeks: "1-13", color: "teal" },
+    { id: "c16", name: "工程力学", day: 5, start: 6, end: 7, room: "教二-101", teacher: "汤轶群", weeks: "1-14", color: "blue" },
+    { id: "c17", name: "形势与政策(3)", day: 5, start: 9, end: 10, room: "教四-401", teacher: "徐进", weeks: "5-8", color: "amber" },
   ];
 
   /* ---------- 每日任务定义 ---------- */

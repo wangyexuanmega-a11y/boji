@@ -304,7 +304,7 @@ body::before{
 .sched-grid{
   display:grid;
   grid-template-columns:34px repeat(7, 78px);
-  grid-template-rows:46px repeat(10, 58px);
+  grid-template-rows:46px repeat(13, 56px);
   gap:4px;
   min-width:max-content;
   padding-bottom:4px;
