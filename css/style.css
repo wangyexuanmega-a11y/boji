@@ -481,6 +481,21 @@ body::before{
 }
 .warn-box b{ display:block; margin-bottom:4px; font-size:12.5px; }
 
+/* 学习配方 */
+.recipe{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.recipe .r-head{
+  font-size:11px; font-weight:700; color:var(--ink-2);
+  letter-spacing:.02em; margin-bottom:7px; padding-bottom:6px;
+  border-bottom:1px solid var(--line-2);
+}
+.recipe .r-item{
+  display:flex; justify-content:space-between; gap:6px;
+  font-size:11.5px; padding:3px 0; line-height:1.35;
+}
+.recipe .r-item span:last-child{
+  color:var(--ink-3); font-variant-numeric:tabular-nums; flex:none;
+}
+
 /* ---------------- 数据 ---------------- */
 .chart-box{ padding:6px 0 0; }
 .chart-box svg{ display:block; width:100%; height:auto; overflow:visible; }

@@ -6,14 +6,14 @@ import fs from "node:fs";
 import { spawn } from "node:child_process";
 
 const BASE = process.argv[2] || "http://127.0.0.1:8765/";
-const OUTDIR = process.argv[3] || "C:/Users/lenovo/Desktop/暑假项目/薄肌/.shots";
+const OUTDIR = process.argv[3] || ".shots";
 const VW = Number(process.argv[4] || 390);
 const VH = Number(process.argv[5] || 844);
 const HASHES = (process.argv[6] || "today").split(",").filter(Boolean);
 const EVAL_ARG = process.argv[7] || "";
 const EVAL_JS = EVAL_ARG.startsWith("@") ? fs.readFileSync(EVAL_ARG.slice(1), "utf8") : EVAL_ARG;
 const PORT = 9333;
-const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+const CHROME = process.env.CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 fs.mkdirSync(OUTDIR, { recursive: true });

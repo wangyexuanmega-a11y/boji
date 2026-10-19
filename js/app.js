@@ -336,9 +336,29 @@
     ];
     var tip = tips[now.getDate() % tips.length];
 
+    /* 学习配方 */
+    var recipe = '<div class="card card-tight">' +
+      '<div class="recipe">' +
+        '<div>' +
+          '<div class="r-head">西班牙语 · ' + S.settings.esMin + ' 分钟</div>' +
+          D.SPANISH.map(function (x) {
+            return '<div class="r-item"><span style="color:var(--ink-2)">' + esc(x.name) + '</span><span>' + x.min + "'</span></div>";
+          }).join("") +
+        '</div>' +
+        '<div>' +
+          '<div class="r-head">机器学习 · ' + S.settings.mlMin + ' 分钟</div>' +
+          D.ML_PLAN.map(function (x) {
+            return '<div class="r-item"><span style="color:var(--ink-2)">' + esc(x.name) + '</span><span>' + x.min + "'</span></div>";
+          }).join("") +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
     return head() + hero +
       '<div class="sec-head"><div class="sec-title">今日打卡</div><div class="sec-more num">' + pct + '%</div></div>' +
       '<div class="task-list">' + taskHtml + '</div>' +
+      '<div class="sec-head"><div class="sec-title">今天怎么练</div></div>' +
+      recipe +
       '<div class="sec-head"><div class="sec-title">今天</div></div>' +
       courseHtml + trainCard +
       '<div class="card" style="background:var(--surface-2);border-style:dashed">' +
