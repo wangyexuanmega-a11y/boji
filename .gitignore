@@ -6,14 +6,19 @@ desktop.ini
 # 开发临时文件
 .shots/
 .playwright-cli/
+.build/
 *.log
 .workbuddy-ai/
 .workbuddy/
 .wbapp_*.genie
 
-# 打包产物
+# 依赖与生成物
 node_modules/
 www/
-android/
-ios/
 package-lock.json
+ios/
+
+# Android 工程（用 tools/to-apk.sh 或 README 里的命令重建）
+android/
+*.apk
+*.keystore

@@ -62,17 +62,43 @@ GitHub 新建仓库 → Add file → Upload files → 把 `index.html`、`css/`�
 
 装完就是一个独立图标，全屏运行，断网也能用。
 
-## 打包成 APK
+## 装 APK
+
+**直接下载：**
+
+https://github.com/wangyexuanmega-a11y/boji/releases/download/v1.0.0/boji-v1.0.apk
+
+手机浏览器打开就能下（4 MB）。下载完点开安装，Android 会提示「未知来源」，允许一次即可。
+
+这是 debug 签名版本，自己用没问题，不能上应用商店。
+
+### 改完代码怎么重新打包
+
+环境已经装好（JDK 17 + Android SDK 在 `C:/Users/lenovo/abuild/`）：
 
 ```bash
-# 需要 Node 18+ 和 Android Studio
 cd 薄肌
-bash tools/to-apk.sh
+# 1. 同步网页文件
+rm -rf www && mkdir -p www
+cp index.html manifest.webmanifest sw.js www/
+cp -r css js icons www/
+
+# 2. 同步到 Android 工程
+npx cap sync android
+
+# 3. 打包
+cd android
+export JAVA_HOME="C:/Users/lenovo/abuild/jdk"
+export ANDROID_HOME="C:/Users/lenovo/abuild/sdk"
+./gradlew assembleDebug --no-daemon
+
+# 产物：android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-脚本会自动建 `www/` 目录、装 Capacitor、生成 Android 工程，然后你只需要在 Android Studio 里点 Build → Build APK。
+从零开始的话需要装 JDK 17 + Android cmdline-tools，`tools/to-apk.sh` 里有流程。
 
-首次打包要下载 Gradle 和 SDK，比较慢。之后每次改完网页代码，跑一次 `npx cap sync android` 再打包就行。
+**注意**：Gradle 会拒绝中文路径。项目已经在 `android/gradle.properties` 里加了
+`android.overridePathCheck=true` 绕过，如果还是报错，把项目移到纯英文路径再构建。
 
 ## 怎么改
 
