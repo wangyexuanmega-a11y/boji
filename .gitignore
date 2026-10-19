@@ -1,0 +1,16 @@
+# 系统垃圾
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 开发临时文件
+.shots/
+.playwright-cli/
+*.log
+
+# 打包产物
+node_modules/
+www/
+android/
+ios/
+package-lock.json
