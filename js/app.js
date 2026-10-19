@@ -475,7 +475,10 @@
       legend +
       '<div class="sec-head"><div class="sec-title">' +
         (weekOffset === 0 ? "今天" : WD_CN[base.getDay()]) + ' 的课</div>' +
-        '<button class="btn btn-sm btn-ghost" data-act="add-course">' + ico("plus") + '加课</button></div>' +
+        '<div class="row" style="gap:6px">' +
+          '<button class="btn btn-sm btn-ghost" data-act="import-course">批量导入</button>' +
+          '<button class="btn btn-sm btn-ghost" data-act="add-course">' + ico("plus") + '加课</button>' +
+        '</div></div>' +
       list +
       '<p class="tiny" style="margin:14px 2px;line-height:1.6">点课程块可以编辑或删除。单双周按学期起始日自动计算，起始日在「数据 → 设置」里改。</p>';
   }
@@ -523,6 +526,26 @@
       }).join("") +
     '</div>';
 
+    var pullup = '<div class="card">' +
+      '<div class="between" style="margin-bottom:10px">' +
+        '<div style="font-size:13.5px;font-weight:700">引体向上 0 → 1</div>' +
+        '<span class="tiny">你现在在这条路上</span>' +
+      '</div>' +
+      D.PULLUP_STAGES.map(function (s, i) {
+        return '<div class="stage">' +
+          '<div class="stage-dot">' + (i + 1) + '</div>' +
+          '<div class="stage-body">' +
+            '<div class="stage-head"><b>' + esc(s.name) + '</b><span>' + esc(s.stage) + '</span></div>' +
+            s.items.map(function (x) { return '<div class="stage-item">' + esc(x) + '</div>'; }).join("") +
+            '<div class="stage-goal">目标：' + esc(s.goal) + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join("") +
+      '<div class="tiny" style="margin-top:10px;line-height:1.6;padding-top:10px;border-top:1px solid var(--line-2)">' +
+        '单杠在哪：学校操场、体育馆、宿舍楼下一般都有。实在没有，买一根门上单杠，五十块，不占地。' +
+      '</div>' +
+    '</div>';
+
     return '' +
       '<div class="topbar" style="padding-bottom:8px">' +
         '<div><div style="font-size:19px;font-weight:750;letter-spacing:-.02em">训练</div>' +
@@ -550,12 +573,13 @@
       '<div class="sec-head"><div class="sec-title">本周计划</div></div>' +
       '<div class="card card-tight">' +
         '<div class="tiny" style="line-height:1.7">' +
-          '<b style="color:var(--ink)">推 / 拉 / 腿</b> 分化，每个部位每周 1-2 次；' +
-          '周三游泳课算有氧；周日完全休息。练薄肌要<strong>重量适中、次数偏多、组间短</strong>，' +
-          '别追大重量。' +
+          '<b style="color:var(--ink)">推 / 腿 / 游泳 / 拉 / 跑步 / 循环 / 休息</b>，全程零器械。' +
+          '周三游泳课算有氧，周五专门跑步，周日只恢复。' +
+          '练薄肌要<strong>次数偏多、组间短、不追大重量</strong>，把体脂压下去线条自然出来。' +
         '</div>' +
       '</div>' +
-      stretch;
+      stretch +
+      pullup;
   }
 
   /* ================= 渲染：饮食 ================= */
@@ -592,6 +616,17 @@
 
     var truth = D.RULES.truth.map(function (t) { return "<div>" + t + "</div>"; }).join("");
 
+    var canteen = D.CANTEEN.map(function (r, i) {
+      return '<div class="rule-item"><div class="idx num">' + (i + 1) + '</div><div>' + r + '</div></div>';
+    }).join("");
+
+    var swaps = D.SWAPS.map(function (s) {
+      return '<div class="swap-row">' +
+        '<div class="swap-miss">没有 ' + esc(s.miss) + '</div>' +
+        '<div class="swap-use">' + esc(s.use) + '</div>' +
+      '</div>';
+    }).join("");
+
     return '' +
       '<div class="topbar" style="padding-bottom:8px">' +
         '<div><div style="font-size:19px;font-weight:750;letter-spacing:-.02em">饮食</div>' +
@@ -610,6 +645,10 @@
       '</div>' +
       '<div class="sec-head"><div class="sec-title">吃的原则</div></div>' +
       '<div class="card card-tight">' + rules + '</div>' +
+      '<div class="sec-head"><div class="sec-title">食堂怎么点</div></div>' +
+      '<div class="card card-tight">' + canteen + '</div>' +
+      '<div class="sec-head"><div class="sec-title">没有就换</div><span class="tiny">别为了一顿饭跑三个食堂</span></div>' +
+      '<div class="card card-tight">' + swaps + '</div>' +
       '<div class="sec-head"><div class="sec-title">长高 / 体态</div></div>' +
       '<div class="card card-tight">' + grow + '</div>' +
       '<div class="sec-head"><div class="sec-title">说点实话</div></div>' +
@@ -927,8 +966,109 @@
     save(true); closeSheet(); render(); toast("已删除");
   }
 
-  function weightSheet() {
-    var now = new Date();
+  /* ================= 课表批量导入 ================= */
+  function importSheet() {
+    openSheet('' +
+      '<div class="sheet-title">批量导入课表</div>' +
+      '<div class="sheet-sub">从教务系统复制课表，整段粘进来。一行一门课，顺序无所谓。</div>' +
+      '<div class="field"><textarea id="f-paste" rows="8" placeholder="工程力学 周二 1-2节 教二-101&#10;大学物理(B)II 周二 3-4节 教六-201&#10;大学物理实验 周四 6-7节 实验中心 双周"></textarea></div>' +
+      '<div class="paste-tip">能认：周X / 星期X、1-2节 / 第1-2节、单周 / 双周、教二-101 这类教室。<br>认不出的行会跳过，导入后还能逐门改。</div>' +
+      '<div style="display:flex;gap:9px;margin-top:16px">' +
+        '<button class="btn btn-ghost" style="flex:1" data-act="close-sheet">取消</button>' +
+        '<button class="btn btn-primary" style="flex:1.4" data-act="do-import">导入</button>' +
+      '</div>'
+    );
+  }
+
+  function parseScheduleText(text) {
+    var out = [];
+    var skipped = 0;
+    var lines = String(text || "").split(/\r?\n/);
+
+    lines.forEach(function (raw) {
+      var line = raw.replace(/\u00a0/g, " ").trim();
+      if (!line || line.length < 4) return;
+
+      var rest = " " + line + " ";
+      var day = 0, start = 0, end = 0, room = "", weeks = "all";
+      var m;
+
+      // 周次：1-16周 / 第1-16周 / 单周 / 双周
+      if ((m = rest.match(/(?:第)?\s*(\d{1,2})\s*[-~—－至]\s*(\d{1,2})\s*周/))) {
+        rest = rest.replace(m[0], " ");
+        if (/单/.test(line)) weeks = "odd";
+        else if (/双/.test(line)) weeks = "even";
+      } else if ((m = rest.match(/(单|双)周/))) {
+        weeks = m[1] === "单" ? "odd" : "even";
+        rest = rest.replace(m[0], " ");
+      }
+
+      // 星期
+      if ((m = rest.match(/(?:星期|周)\s*([一二三四五六日天1-7])/))) {
+        var ch = m[1];
+        day = /[1-7]/.test(ch) ? +ch : "一二三四五六日".indexOf(ch === "天" ? "日" : ch) + 1;
+        rest = rest.replace(m[0], " ");
+      }
+      if (!day) { skipped++; return; }
+
+      // 节次
+      if ((m = rest.match(/(?:第)?\s*(\d{1,2})\s*[-~—－至]\s*(\d{1,2})\s*节/))) {
+        start = +m[1]; end = +m[2];
+        rest = rest.replace(m[0], " ");
+      } else if ((m = rest.match(/第\s*(\d{1,2})\s*节/))) {
+        start = end = +m[1];
+        rest = rest.replace(m[0], " ");
+      }
+      if (!start) { skipped++; return; }
+      if (end < start) { var tmp = start; start = end; end = tmp; }
+      if (start < 1 || start > 10) { skipped++; return; }
+      end = Math.min(end, 10);
+
+      // 教室
+      if ((m = rest.match(/(?:教室|地点|上课地点)\s*[:：]?\s*([^\s,，;；|]+)/))) {
+        room = m[1];
+        rest = rest.replace(m[0], " ");
+      } else if ((m = rest.match(/([\u4e00-\u9fa5A-Za-z]{1,6}\s*[-－]\s*\d{2,4})/))) {
+        room = m[1].replace(/\s+/g, "");
+        rest = rest.replace(m[0], " ");
+      }
+
+      var name = rest.replace(/[|｜,，;；:：]/g, " ").replace(/\s+/g, " ").trim();
+      if (!name || name.length > 30) { skipped++; return; }
+
+      out.push({ name: name, day: day, start: start, end: end, room: room, weeks: weeks });
+    });
+
+    return { list: out, skipped: skipped };
+  }
+
+  function doImportCourses() {
+    var ta = $("#f-paste");
+    if (!ta) return;
+    var res = parseScheduleText(ta.value);
+    if (!res.list.length) {
+      toast("一门都没认出来，检查一下格式");
+      return;
+    }
+    var keys = Object.keys(D.COLORS);
+    var added = 0;
+    res.list.forEach(function (c) {
+      var dup = S.courses.some(function (x) {
+        return x.name === c.name && x.day === c.day && x.start === c.start;
+      });
+      if (dup) return;
+      c.id = "c" + Date.now().toString(36) + "_" + added;
+      c.color = keys[(S.courses.length + added) % keys.length];
+      S.courses.push(c);
+      added++;
+    });
+    save(true);
+    closeSheet();
+    render();
+    toast("导入 " + added + " 门" + (res.skipped ? "，跳过 " + res.skipped + " 行" : ""));
+  }
+
+  function weightSheet() {    var now = new Date();
     var last = (S.body && S.body.length) ? S.body[S.body.length - 1].w : S.profile.weight;
     openSheet('' +
       '<div class="sheet-title">记录体重</div>' +
@@ -1024,6 +1164,8 @@
         case "wk-next": weekOffset++; render(); break;
         case "wk-today": weekOffset = 0; render(); break;
         case "add-course": courseSheet(null); break;
+        case "import-course": importSheet(); break;
+        case "do-import": doImportCourses(); break;
         case "save-course": saveCourse(actEl.getAttribute("data-id")); break;
         case "del-course": deleteCourse(actEl.getAttribute("data-id")); break;
         case "close-sheet": closeSheet(); break;
